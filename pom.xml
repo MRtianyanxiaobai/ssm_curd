@@ -155,6 +155,19 @@
         </includes>
         <filtering>false</filtering>
       </resource>
+        <resource>
+          <directory>src/main/java</directory>
+          <includes>
+            <include>**/*.*</include>
+          </includes>
+        </resource>
+        <resource>
+          <directory>src/main/resources</directory>
+          <includes>
+            <include>**/*.*</include>
+          </includes>
+        </resource>
+
     </resources>
     <finalName>ssm_crud</finalName>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->

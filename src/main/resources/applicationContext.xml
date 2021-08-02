@@ -1,6 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+    <!--spring 的配置文件-->
+    <!--  1. 配置文件配置除了 controller 的扫描器-->
+    <context:component-scan base-package="com.atguigu">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!--================================  2、数据源，事务控制，xxx ================================   -->
+        <!--读取配置文件    -->
+    <context:property-placeholder location="classpath:jdbc.properties"></context:property-placeholder>
+        <!--现在整个命名空间中就用刚才加载的配置文件中的变量了-->
+    <bean id="poolDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+        <property name="driverClass" value="${jdbc.driverClass}"></property>
+        <property name="user" value="${jdbc.user}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+    </bean>
+
+    <!-- ================================ 配置spring 和 MyBatis 的整合==============================  -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--  指定mybatis的全局配置文件的位置      -->
+        <property name="configLocation"  value="classpath:mybatis-config.xml"></property>
+        <property name="dataSource" ref="poolDataSource"></property>
+        <!--      指定mybatis的 mapper 文件所在位置      -->
+        <property name="mapperLocations" value="classpath:mapper/*.xml"></property>
+    </bean>
+    <!-- 配置扫描器，将 mybatis 接口加入到 IOC 容器中   -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+            <!-- 扫描所有的 dao 接口，加入到 IOC 容器中       -->
+            <property name="basePackage" value="com.atguigu.curd.dao"></property>
+    </bean>
+    <!-- 配置一个可以执行批量的sqlSession -->
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory"></constructor-arg>
+        <constructor-arg name="executorType" value="BATCH"></constructor-arg>
+    </bean>
+
+    <!-- ================================ 配置 事务的控制==============================  -->
+    <!--创建事务管理器-->
+    <bean id="dataSourceTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+            <!--控制数据源        -->
+        <property name="dataSource" ref="poolDataSource"></property>
+    </bean>
+    <!--   配置事务增强，事务如何切入，即配置通知，指定哪些方法是事务方法 -->
+    <tx:advice id="txAdvice" transaction-manager="dataSourceTransactionManager" >
+            <tx:attributes>
+                <!-- 配置事务增强，事务的切入方法: 所有方法       -->
+                <tx:method name="*"/>
+                <!--     以 get 开始的所有方法 都是只读的          -->
+                <tx:method name="get*" read-only="true"></tx:method>
+            </tx:attributes>
+
+    </tx:advice>
+
+    <!-- 开启xml 声明式事务管理-->
+    <aop:config>
+        <!--   切入点表达式-->
+        <aop:pointcut id="txPoint" expression="execution(* com.atguigu.curd.service..*(..))"/>
+        <!-- 利用 JDK 动态代理 配置事务增强        -->
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPoint"></aop:advisor>
+    </aop:config>
+
+
+    <!--综上： Spring配置文件的核心点（数据源、与mybatis的整合，事务控制） -->
+
+
 
 </beans>

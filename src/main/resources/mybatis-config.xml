@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+<!--把一些 不好配置的配置内容放到全局配置文件中   -->
+    <!-- ======= 开启驼峰映射，从数据库映射到bean 中==============-->
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
+    <typeAliases>
+        <!--  为 bean 包中的所有类自动加一个别名,别名规则是,对应的包装类名首字母变为小写      -->
+        <!--比如 User 的别名就变成了 user-->
+        <package name="com.atguigu.curd.bean"/>
+    </typeAliases>
+
+    <!--===============安装分页查询的插件========================================-->
+    <plugins>
+        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <!--分页参数合理化-->
+            <property name="reasonable" value="true"/>
+        </plugin>
+    </plugins>
+</configuration>
