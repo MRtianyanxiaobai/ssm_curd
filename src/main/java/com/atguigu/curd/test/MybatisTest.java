@@ -6,6 +6,8 @@ import com.atguigu.curd.bean.Employee;
 import com.atguigu.curd.bean.EmployeeExample;
 import com.atguigu.curd.dao.DepartmentMapper;
 import com.atguigu.curd.dao.EmployeeMapper;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,6 +83,30 @@ public class MybatisTest {
             System.out.println("========"+emp);
 
         }
+    }
+    // 分页查询
+    @Test
+    public void TestPageHelper(){
+        int pn =1;
+        PageHelper.startPage(pn,5);
+        List<Employee> employees = employeeMapper.selectByExampleWithDept(null);
+
+        PageInfo pageInfo = new PageInfo(employees,5);
+        System.out.println("当前页码："+pageInfo.getPageNum());
+        System.out.println("总页码"+pageInfo.getPages());
+
+        System.out.println("在前端需要显示的连续页码:");
+        int num[] = pageInfo.getNavigatepageNums();
+        for(int i: num){
+            System.out.println(" "+i );
+        }
+        List<Employee> lists = pageInfo.getList();
+        //获取员工数据
+        for (Employee e:lists){
+            System.out.println(e);
+        }
+
+
     }
 
 }
