@@ -27,7 +27,68 @@
     <script src="${APP_PATH}/static/bootstrap-3.3.7-dist/js/bootstrap.js"></script>
 </head>
 <body>
+<%--============================================新增按钮的模态框======================================================--%>
+<!-- Modal -->
+<div class="modal fade" id="empAddModal" tabindex="-1" role="dialog" >
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">员工添加</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">empName</label>
+                        <div class="col-sm-10">
+                            <input type="text"  name="stuName" class="form-control" id="empName_add_input" placeholder="stuName">
+                            <span class="help-block"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">email</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="email" class="form-control" id="email_add_input" placeholder="email@atguigu.com">
+                            <span class="help-block"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputPassword3" class="col-sm-2 control-label">Password</label>
+                        <div class="col-sm-10">
+                            <input type="password" class="form-control" id="inputPassword3" placeholder="Password">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">gender</label>
+                        <div class="col-sm-10">
+                            <label class="radio-inline">
+                                <input type="radio" name="gender" id="gender1_add_input" value="M" checked="checked"> 男
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" name="gender" id="gender2_add_input" value="F"> 女
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">deptName</label>
+                        <div class="col-sm-4">
+                            <%--   可选框，只能选这里面相关的部门   --%>
+                            <!-- 部门提交部门id即可 -->
+                            <select class="form-control" name="dId">
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="emp_save_btn">保存</button>
+            </div>
 
+        </div>
+    </div>
+</div>
+<%--==============================================主页用户展示====================================================--%>
 <!--创建显示页面-->
 <div class="container">
     <%-- 标题--%>
@@ -82,7 +143,7 @@
     //1、页面加载完成以后，直接发送 ajax 请求，要到分页数据
     $(function (){
         to_page(1);
-    })
+    });
     function  to_page(pn){
         $.ajax({
             url:"${APP_PATH}/emps",
@@ -199,6 +260,151 @@
             navEle.appendTo("#page_nav_area");
         }
     }
+
+//==============================================================================模态框相关js
+    //清空表单样式及内容
+    function reset_form(ele){
+        $(ele)[0].reset();
+        //清空表单样式
+        $(ele).find("*").removeClass("has-error has-success");
+        $(ele).find(".help-block").text("");
+    }
+//=============================================用户添加的动态框============================================================================================
+    //查出所有的部门信息并显示在下拉列表中
+    function getDepts(ele){
+        //清空之前的下拉列表值
+        $(ele).empty();
+        //ajax 得到所有的dept
+        $.ajax({
+            url: "${APP_PATH}/depts",
+            type: "GET",
+            success: function (res) {
+                $.each(res.extend.depts,function (i,item) {
+                    var opt = $("<option></option>").append(this.deptName).attr("value",this.deptId);
+                    opt.appendTo(ele);
+
+                })
+
+            }
+        })
+    }
+    //给新增按钮添加模态框
+    $("#emp_add_modal_btn").click(function (){
+        //清除表单数据（表单完整重置（表单的数据，表单的样式））
+        reset_form("#empAddModal form");
+        //添加 department的可选框
+        getDepts("#empAddModal select");
+        //弹出模态框
+        $("#empAddModal").modal({
+            backdrop:'static'
+        });
+
+
+    });
+
+    //显示校验结果：用于下面 的  $("#empName_add_input").change(function () 函数
+    function show_validate_msg(ele,status,msg){
+        //清除当前元素状态
+        //也就是去除之前的校验提示
+        $(ele).parent().removeClass("has-success has-error");
+        $(ele).next("span").text("");
+        if ("success"==status){
+            $(ele).parent().addClass("has-success");
+            $(ele).next("span").text(msg);
+        }else if("error" == status){
+            $(ele).parent().addClass("has-error");
+            $(ele).next("span").text(msg);
+        }
+
+    }
+    // 校验用户名是否可用
+    $("#empName_add_input").change(function () {
+       //发送 ajax 请求校验是否可用
+       var stuName = this.value;
+       $.ajax({
+           url:"${APP_PATH}/checkUser",
+           data:"stuName="+stuName,
+           type:"POST",
+           success:function (res) {
+               if (res.code==100){
+                   //回显，表示用户名可用
+                   show_validate_msg("#empName_add_input","success","用户名可用");
+                   //用于前端的验证，在validate_add_form函数中应用
+                   $("#emp_save_btn").attr("ajax-va","success");
+
+               }
+               else{
+                   //回显表示用户名不可用
+                   show_validate_msg("#empName_add_input","error",res.extend.va_msg);
+                   //用于前端的验证，在validate_add_form函数中应用
+                   $("#emp_save_btn").attr("ajax-va","error");
+
+               }
+           }
+       })
+    });
+    //添加时校验其他属性
+    function   validate_add_form(){
+        //1、拿到要校验的数据，使用正则表达进行校验
+        var empName = $("#empName_add_input").val();
+        var regName = /(^[a-zA-Z0-9_-]{6,16}$)|(^[\u2E80-\u9FFF]{2,5})/;
+        if(!regName.test(empName)){
+            //alert("用户名可以是2-5位中文或者6-16位英文和数字的组合");
+            show_validate_msg("#empName_add_input", "error", "用户名可以是2-5位中文或者6-16位英文和数字的组合");
+            return false;
+        }else{
+            show_validate_msg("#empName_add_input", "success", "");
+        };
+
+        //2、校验邮箱信息
+        var email = $("#email_add_input").val();
+        var regEmail = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/;
+        if(!regEmail.test(email)){
+            //alert("邮箱格式不正确");
+            //应该清空这个元素之前的样式
+            show_validate_msg("#email_add_input", "error", "邮箱格式不正确");
+            /* $("#email_add_input").parent().addClass("has-error");
+            $("#email_add_input").next("span").text("邮箱格式不正确"); */
+            return false;
+        }else{
+            show_validate_msg("#email_add_input", "success", "");
+        }
+        return true;
+    }
+    //动态框的保存按钮
+    $("#emp_save_btn").click(function () {
+        //1、模态框中填写的表单数据提交给服务器进行保存
+        //1、先对要提交给服务器的数据进行校验
+        if(!validate_add_form()){
+            return false;
+        };
+        //2、判断之前的 ajax 用户名校验是否成功
+        if($(this).attr("ajax-va")=="error"){
+            return false;
+        }
+        //利用 ajax 保存信息，并且回显
+        $.ajax({
+            url:"${APP_PATH}/emp",
+            type:"POST",
+            data: $("#empAddModal form").serialize(),
+            success:function (res) {
+                if (res.code==100){
+
+                    //1、关闭模态框
+                    $("#empAddModal").modal('hide');
+                    //回显
+                    //添加数据会在最后一页
+                    to_page(totalRecord);
+
+                }else{
+                    //显示失败信息
+                    console.log(res);
+                }
+
+            }
+        })
+    })
+
 </script>
 </body>
 </html>

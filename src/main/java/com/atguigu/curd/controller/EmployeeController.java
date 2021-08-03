@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -45,5 +46,36 @@ public class EmployeeController {
         //将查询结果封装到 pageInfo 中
         PageInfo page = new PageInfo(employees,5);
         return Msg.sucess().add("pageInfo",page);
+    }
+
+    /**
+     * 检验用用户名是否可用
+     */
+    @RequestMapping("/checkUser")
+    @ResponseBody
+    public  Msg checkUser(@RequestParam("stuName") String stuName){
+        String regx = "(^[a-zA-Z0-9_-]{6,16}$)|(^[\u2E80-\u9FFF]{2,5})";
+        //先检测用户名是否合法
+        if(!stuName.matches(regx)){
+            return Msg.fail().add("va_msg", "用户名必须是6-16位数字和字母的组合或者2-5位中文");
+        }
+        //检查用户名是否重复
+        boolean b = employeeService.checkUser(stuName);
+        if (b){
+            return Msg.sucess();
+        }else{
+            return  Msg.fail().add("va_msg","用户名不可用");
+        }
+    }
+
+    /**
+     * 员工保存
+     */
+    @RequestMapping(value = "/emp",method = RequestMethod.POST)
+    @ResponseBody
+    public Msg saveEmp(Employee employee){
+        System.out.println(employee);
+        employeeService.saveEmployee(employee);
+        return  Msg.sucess();
     }
 }
