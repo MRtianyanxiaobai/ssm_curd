@@ -33,4 +33,35 @@ public class EmployeeService {
     public void saveEmployee(Employee employee){
         employeeMapper.insertSelective(employee);
     }
+    /**
+     * 查询员工
+     */
+    public Employee getEmp(Integer id) {
+        return  employeeMapper.selectByPrimaryKey(id);
+
+    }
+    /**
+     * 更新员工
+     */
+    public  int updateEmployee(Employee employee){
+        return employeeMapper.updateByPrimaryKeySelective(employee);
+    }
+    /**
+     * 根据 id 㤇 删除员工
+     */
+    public  int deletEmployee(Integer id){
+       EmployeeExample example = new EmployeeExample();
+       example.createCriteria().andStuIdEqualTo(id);
+        return employeeMapper.deleteByExample(example);
+    }
+    /**
+     * 根据 传过来的 id 数组，删除多个员工
+     */
+    public  int deleBatchEmployee(List<Integer> ids){
+        EmployeeExample example = new EmployeeExample();
+        example.createCriteria().andStuIdIn(ids);
+        return  employeeMapper.deleteByExample(example);
+    }
+
+
 }

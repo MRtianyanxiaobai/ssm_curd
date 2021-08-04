@@ -84,6 +84,12 @@ public class MybatisTest {
 
         }
     }
+    //更新
+    @Test
+    public  void TestUpdate(){
+        Employee employee = new Employee(1,"白曜溥","M","yang@123.com",3);
+        System.out.println(employeeMapper.updateByPrimaryKeySelective(employee));
+    }
     // 分页查询
     @Test
     public void TestPageHelper(){

@@ -8,11 +8,9 @@ import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -78,4 +76,60 @@ public class EmployeeController {
         employeeService.saveEmployee(employee);
         return  Msg.sucess();
     }
+    /**
+     * 查询单个员工
+     */
+    @RequestMapping(value ="/emp/{id}",method=RequestMethod.GET)
+    @ResponseBody
+    public Msg getEmp(@PathVariable("id") Integer id){
+        Employee employee = employeeService.getEmp(id);
+        return Msg.sucess().add("emp",employee);
+    }
+    /**
+     * 根据 id 更新某个员工
+     */
+    @RequestMapping(value ="/emp/{id}",method=RequestMethod.PUT)
+    @ResponseBody
+    public Msg updateEmp(@PathVariable("id") Integer id,Employee employee){
+            System.out.println(id);
+            System.out.println(employee);
+            employee.setStuId(id);
+            employeeService.updateEmployee(employee);
+            return  Msg.sucess();
+    }
+//    /**
+//     * 根据id删除员工
+//     */
+//    @RequestMapping(value ="/emp/{id}",method=RequestMethod.DELETE)
+//    @ResponseBody
+//    public Msg deleteEmp(@PathVariable("id") Integer id){
+//        System.out.println(id);
+//        employeeService.deletEmployee(id);
+//        return  Msg.sucess();
+//    }
+    /**
+     * 单个删除和多个删除二合一。该函数既可以处理单个员工也可以出多个员工
+     */
+    @RequestMapping(value ="/emp/{ids}",method=RequestMethod.DELETE)
+    @ResponseBody
+    public Msg deleteBatchEmp(@PathVariable("ids") String ids){
+        System.out.println(ids);
+        //传过来的id 以“-”进行分隔符，如 1-2-3
+        // 批量删除
+       if(ids.contains("-")){
+           List<Integer> del_ids = new ArrayList<>();
+           String[] str = ids.split("-");
+           for(String s:str){
+               del_ids.add(Integer.parseInt(s));
+           }
+           employeeService.deleBatchEmployee(del_ids);
+       }
+       else{
+        //单个删除
+        Integer id = Integer.parseInt(ids);
+        employeeService.deletEmployee(id);
+       }
+       return Msg.sucess();
+    }
+
 }
